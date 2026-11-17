@@ -51,7 +51,7 @@ def main():
             page.get_by_text("Waste Classification",exact=True).first.click()
             page.locator('input[type="file"]').set_input_files(str(ROOT/"data/dataset-resized"/sample.path))
             page.get_by_role("button",name="Classify image",exact=True).click()
-            page.get_by_role("heading",name="2 � Fuzzy recycling decision support",exact=True).wait_for(timeout=60000)
+            page.get_by_role("heading",name="2 · Fuzzy recycling decision support",exact=True).wait_for(timeout=60000)
             wait_until_idle(page)
             page.screenshot(path=str(target/"classification.png"),full_page=False)
             slider=page.get_by_role("slider")
