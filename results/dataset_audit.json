@@ -1,0 +1,42 @@
+{
+  "raw_class_distribution": {
+    "cardboard": 403,
+    "glass": 501,
+    "metal": 410,
+    "paper": 594,
+    "plastic": 482,
+    "trash": 137
+  },
+  "excluded_images": [
+    {
+      "path": "glass/glass115.jpg",
+      "sha256": "723358e0dd188fb691504209c1577eb91f388d51d1661847891fd6637a8c3ab8",
+      "reason": "conflicting labels"
+    },
+    {
+      "path": "glass/glass176.jpg",
+      "sha256": "0b7ca01385e309d7d0f8997ea7a535284ad720fc94794e883b59c1b433a3893c",
+      "reason": "conflicting labels"
+    },
+    {
+      "path": "glass/glass389.jpg",
+      "sha256": "70af5aac31a818bc295285073065a12e71580e883844987aeec44d368fb29171",
+      "reason": "conflicting labels"
+    },
+    {
+      "path": "metal/metal91.jpg",
+      "sha256": "723358e0dd188fb691504209c1577eb91f388d51d1661847891fd6637a8c3ab8",
+      "reason": "conflicting labels"
+    },
+    {
+      "path": "plastic/plastic152.jpg",
+      "sha256": "0b7ca01385e309d7d0f8997ea7a535284ad720fc94794e883b59c1b433a3893c",
+      "reason": "conflicting labels"
+    },
+    {
+      "path": "plastic/plastic332.jpg",
+      "sha256": "70af5aac31a818bc295285073065a12e71580e883844987aeec44d368fb29171",
+      "reason": "conflicting labels"
+    }
+  ]
+}

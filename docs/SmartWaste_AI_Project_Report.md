@@ -82,7 +82,18 @@ The main information flow is image validation, consistent preprocessing, CNN cat
 TrashNet [1] supplies the six original labels. The upstream repository describes 2,527 images collected largely against white posterboard. Only the resized archive is used. The project computes the actual distribution from downloaded image bytes rather than presenting upstream counts as locally verified observations.
 
 <!-- DATASET_START -->
-No archive has been downloaded in this environment. The downloader will record its exact byte count, SHA-256 and actual validated class distribution in `results/dataset.json`. Upstream counts are background information and are not reported as local measurements.
+The downloaded resized ZIP contains 42,834,870 bytes (40.85 MiB). The validated inventory has 2,521 unique decoded images. Archive SHA-256: `0bf472790f8b20e5c950d5b5012a9d38af0d3392efd65f8ce171334fc16b07c2`.
+
+| Category | Validated images |
+|---|---:|
+| cardboard | 403 |
+| glass | 498 |
+| metal | 409 |
+| paper | 594 |
+| plastic | 480 |
+| trash | 137 |
+
+Raw archive folder counts: cardboard 403, glass 501, metal 410, paper 594, plastic 482, trash 137. A total of 6 files were excluded as exact duplicates or members of conflicting-label duplicate groups. Full paths, hashes and reasons are recorded in the dataset metadata; no conflicting label is chosen arbitrarily.
 <!-- DATASET_END -->
 
 Before extraction, every ZIP member is checked for traversal, absolute paths, Windows path tricks, symbolic links, encryption, duplicate targets and unreasonable total size. Files are extracted into a temporary directory. The six folders and all image files must validate before the dataset is installed. Exact decoded duplicates within a category are removed from the modelling inventory. The real archive also contains identical images assigned different labels; all members of each conflicting-label group are excluded from every split. This avoids inventing ground truth by choosing the first encountered label. Raw folder counts and every excluded path, hash and reason are recorded alongside the modelling distribution.
@@ -189,7 +200,29 @@ The setup script creates an isolated environment on Windows. Repository CI can r
 Accuracy reports the fraction of correct test predictions. Precision, recall and F1 are calculated for each original category, and macro averages give each category equal weight. A confusion matrix records actual versus predicted classes. Training and validation accuracy/loss plots show optimization behaviour; they are not evidence of held-out performance by themselves.
 
 <!-- RESULTS_START -->
-No trained checkpoint or held-out metrics are available in the current local environment. Package installation, the resized dataset download and Git transport failed because external DNS/network access is restricted. Therefore test accuracy, precision, recall and F1 are not reported. The implemented pipeline must run successfully before empirical model performance can be claimed.
+The actual held-out test set contains 379 images. The checkpoint is selected using validation loss only.
+
+| Metric | Measured value |
+|---|---:|
+| Accuracy | 0.8153 |
+| Macro precision | 0.7773 |
+| Macro recall | 0.7821 |
+| Macro F1 | 0.7770 |
+
+| Class | Precision | Recall | F1 | Test support |
+|---|---:|---:|---:|---:|
+| cardboard | 0.9474 | 0.8852 | 0.9153 | 61 |
+| glass | 0.8413 | 0.7067 | 0.7681 | 75 |
+| metal | 0.7714 | 0.8710 | 0.8182 | 62 |
+| paper | 0.8660 | 0.9438 | 0.9032 | 89 |
+| plastic | 0.7794 | 0.7361 | 0.7571 | 72 |
+| trash | 0.4583 | 0.5500 | 0.5000 | 20 |
+
+![Held out confusion matrix](../results/confusion_matrix.png)
+
+![Training and validation accuracy](../results/accuracy.png)
+
+![Training and validation loss](../results/loss.png)
 <!-- RESULTS_END -->
 
 ## 23 Results and discussion

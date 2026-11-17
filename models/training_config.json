@@ -1,0 +1,31 @@
+{
+  "data": "data/dataset-resized",
+  "epochs": 12,
+  "batch_size": 32,
+  "image_size": 160,
+  "seed": 42,
+  "threads": 2,
+  "architecture": "MobileNetV2",
+  "weights": "imagenet",
+  "alpha": 1.0,
+  "base_frozen": true,
+  "dropout": 0.3,
+  "optimizer": "Adam",
+  "learning_rate": 0.001,
+  "preprocessing": "tf.keras.applications.mobilenet_v2.preprocess_input",
+  "class_weights": {
+    "0": 1.0425531914893618,
+    "1": 0.8448275862068966,
+    "2": 1.027972027972028,
+    "3": 0.7067307692307693,
+    "4": 0.875,
+    "5": 3.0625
+  },
+  "split_counts": {
+    "train": 1764,
+    "test": 379,
+    "validation": 378
+  },
+  "python": "3.11.18",
+  "tensorflow": "2.20.0"
+}

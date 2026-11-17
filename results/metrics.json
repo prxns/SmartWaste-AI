@@ -1,0 +1,118 @@
+{
+  "test_accuracy": 0.8153034300791556,
+  "macro_precision": 0.7772985522055932,
+  "macro_recall": 0.7821352743452845,
+  "macro_f1": 0.7769867768489016,
+  "test_samples": 379,
+  "class_names": [
+    "cardboard",
+    "glass",
+    "metal",
+    "paper",
+    "plastic",
+    "trash"
+  ],
+  "classification_report": {
+    "cardboard": {
+      "precision": 0.9473684210526315,
+      "recall": 0.8852459016393442,
+      "f1-score": 0.9152542372881356,
+      "support": 61.0
+    },
+    "glass": {
+      "precision": 0.8412698412698413,
+      "recall": 0.7066666666666667,
+      "f1-score": 0.7681159420289855,
+      "support": 75.0
+    },
+    "metal": {
+      "precision": 0.7714285714285715,
+      "recall": 0.8709677419354839,
+      "f1-score": 0.8181818181818182,
+      "support": 62.0
+    },
+    "paper": {
+      "precision": 0.865979381443299,
+      "recall": 0.9438202247191011,
+      "f1-score": 0.9032258064516129,
+      "support": 89.0
+    },
+    "plastic": {
+      "precision": 0.7794117647058824,
+      "recall": 0.7361111111111112,
+      "f1-score": 0.7571428571428571,
+      "support": 72.0
+    },
+    "trash": {
+      "precision": 0.4583333333333333,
+      "recall": 0.55,
+      "f1-score": 0.5,
+      "support": 20.0
+    },
+    "accuracy": 0.8153034300791556,
+    "macro avg": {
+      "precision": 0.7772985522055932,
+      "recall": 0.7821352743452845,
+      "f1-score": 0.7769867768489016,
+      "support": 379.0
+    },
+    "weighted avg": {
+      "precision": 0.8207645432241791,
+      "recall": 0.8153034300791556,
+      "f1-score": 0.815482478476259,
+      "support": 379.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      54,
+      0,
+      1,
+      5,
+      0,
+      1
+    ],
+    [
+      0,
+      53,
+      9,
+      0,
+      12,
+      1
+    ],
+    [
+      0,
+      3,
+      54,
+      2,
+      2,
+      1
+    ],
+    [
+      2,
+      0,
+      0,
+      84,
+      0,
+      3
+    ],
+    [
+      0,
+      7,
+      4,
+      1,
+      53,
+      7
+    ],
+    [
+      1,
+      0,
+      2,
+      5,
+      1,
+      11
+    ]
+  ],
+  "model_sha256": "753e4de8261cef6ea0dbaa19e018471f5638454a0e5772dba00262b58baeb6da",
+  "split_sha256": "777650b5cd96489f0b7113ef072fd64df2c2bcd13f78c06684f7ea55b1db22f8"
+}

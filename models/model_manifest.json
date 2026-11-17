@@ -1,0 +1,14 @@
+{
+  "model_sha256": "753e4de8261cef6ea0dbaa19e018471f5638454a0e5772dba00262b58baeb6da",
+  "class_names": [
+    "cardboard",
+    "glass",
+    "metal",
+    "paper",
+    "plastic",
+    "trash"
+  ],
+  "test_samples": 379,
+  "best_epoch": 10,
+  "actual_epochs": 12
+}
