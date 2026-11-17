@@ -35,7 +35,11 @@ def main():
             page.get_by_role("button",name="Classify image",exact=True).click()
             page.get_by_role("heading",name="2 · Fuzzy recycling decision support",exact=True).wait_for(timeout=60000)
             page.screenshot(path=str(target/"classification.png"),full_page=False)
-            page.get_by_role("slider").press("End")
+            slider=page.get_by_role("slider")
+            # BaseWeb's slider implements arrow keys; End is not portable.
+            for _ in range(80):
+                slider.press("ArrowRight")
+            print("Classifier contamination after keyboard interaction:",slider.get_attribute("aria-valuenow"))
             page.get_by_text("Low suitability",exact=True).wait_for()
             page.get_by_text("Dashboard",exact=True).first.click()
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()

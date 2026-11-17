@@ -49,14 +49,19 @@ jobs:
       - id: initial
         run: |
           if [ -f models/smartwaste.keras ]; then echo 'missing=false' >> "$GITHUB_OUTPUT"; else echo 'missing=true' >> "$GITHUB_OUTPUT"; fi
-      - name: Recover the successfully trained checkpoint from the previous run
+      - name: Recover validated training artifacts
         if: steps.initial.outputs.missing == 'true'
         uses: actions/download-artifact@v4
         with:
           name: smartwaste-demonstration
           run-id: 44157444636
           github-token: ${{ github.token }}
-          path: .
+          path: .qa/recovered
+      - if: steps.initial.outputs.missing == 'true'
+        run: |
+          cp -a .qa/recovered/models/. models/
+          mkdir -p results
+          cp -a .qa/recovered/results/. results/
       - id: model
         shell: bash
         run: |

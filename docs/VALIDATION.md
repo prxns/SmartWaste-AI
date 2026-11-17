@@ -4,7 +4,7 @@
 
 Python 3.11.9 is installed on Windows. A project virtual environment was created without modifying the system Python. External DNS/network access prevented package installation, the resized dataset download and normal Git HTTPS transport. The connected GitHub integration remained available for repository operations.
 
-`python -m unittest discover -s tests -q` executed **35 tests: 26 passed, 7 skipped, and 2 expected failures**. The seven skips require TensorFlow, Streamlit/Plotly, or a trained checkpoint that is not available locally. The two expected failures document the mathematical monotonicity conflict in the exact prescribed Mamdani system. They are known unmet requirements, not passing global-property tests.
+`python -m unittest discover -s tests -q` executed **36 tests: 27 passed, 7 skipped, and 2 expected failures** after the duplicate-handling regression was added. The seven skips require TensorFlow, Streamlit/Plotly, or a trained checkpoint that is not available locally. The two expected failures document the mathematical monotonicity conflict in the exact prescribed Mamdani system. They are known unmet requirements, not passing global-property tests.
 
 `python -m compileall -q app.py config.py smartwaste scripts tests` completed successfully. The required `python -m pytest -q` command was attempted locally and could not run because Pytest could not be installed. The training and Streamlit startup commands were also attempted; missing TensorFlow/Streamlit dependencies prevent local execution. No local empirical CNN metrics are claimed.
 
@@ -15,3 +15,15 @@ The Word report was generated with python-docx using the bundled document runtim
 The `Validate and prepare demonstration` GitHub workflow is configured to install the complete pinned environment, run Pytest and verify a real Streamlit health endpoint. On an initial main-branch run with no model, it downloads/validates the resized dataset, trains ImageNet MobileNetV2, evaluates the held-out split, runs the suite again, exercises real classification in a browser and creates actual screenshots and an updated report. These are configured checks; their execution status must be verified on the workflow run before they are claimed as completed.
 
 Actual training metrics, when available, are recorded in `results/metrics.json` with the exact model and split hashes. Dataset archive size and source are in `results/dataset.json`. The report builder incorporates only measured artifacts whose model hash matches the checkpoint.
+
+## Actual training and test evidence
+
+Run `44157444636` downloaded and inspected the resized TrashNet archive: **42,834,870 compressed bytes** and 43,288,847 uncompressed bytes. The six original folders contain 2,527 images. After removing exact duplicates and all members of conflicting-label duplicate groups, **2,521 unique unambiguous images** remain. All exclusions are recorded in the actual dataset metadata.
+
+The seeded 160-pixel MobileNetV2 head trained for 12 epochs with a frozen ImageNet base, batch size 32 and class weights. Validation loss selected the checkpoint; the held-out test set contains **379 images**. Actual metrics are accuracy **0.8153034300791556**, macro precision **0.7772985522055932**, macro recall **0.7821352743452845** and macro F1 **0.7769867768489016**.
+
+The full post-training Pytest suite completed with **34 passed, 2 xfailed and 6 subtests passed**, with no dependency or model skips. All five Streamlit sections, navigation, laboratory interaction, session history and the real model's load/hash/inference checks passed. The Streamlit server health endpoint also passed in CI.
+
+The first archive validation correctly halted on contradictory image labels. A dedicated regression now verifies that every member of an ambiguous group is excluded without inventing a preferred label. A later browser-capture step failed because pinned Playwright did not support `ubuntu-latest`, which had moved to Ubuntu 26.04. The trained and tested model was preserved as an Actions artifact. Recovery uses that checkpoint on an explicitly pinned Ubuntu 24.04 runner; it does not repeat training or alter the held-out metrics.
+
+Local Git object writes are also restricted. Commits and ordinary fast-forward updates are made through the connected GitHub integration. No force push, repository visibility change, credential file or raw dataset is committed.
