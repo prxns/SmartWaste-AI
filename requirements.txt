@@ -1,5 +1,6 @@
 # Validated target: Python 3.11. TensorFlow supports native Windows CPU execution.
 tensorflow==2.20.0
+keras==3.15.1
 streamlit==1.51.0
 numpy==2.2.6
 pandas==2.3.3

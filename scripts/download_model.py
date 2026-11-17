@@ -6,7 +6,8 @@ import tempfile
 from urllib.request import urlopen
 from config import MODEL_DIR, MODEL_PATH
 
-MODEL_URL = "https://raw.githubusercontent.com/prxns/SmartWaste-AI/main/models/smartwaste.keras"
+MODEL_REF = os.environ.get("SMARTWASTE_MODEL_REF", "main")
+MODEL_URL = f"https://raw.githubusercontent.com/prxns/SmartWaste-AI/{MODEL_REF}/models/smartwaste.keras"
 
 
 def main():
