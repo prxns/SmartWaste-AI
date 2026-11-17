@@ -1,20 +1,89 @@
-/* Environmental technology palette; native controls stay accessible. */
-.block-container { max-width: 1240px; padding-top: 2.2rem; padding-bottom: 3rem; }
-h1 { font-size: 2.25rem !important; font-weight: 650 !important; letter-spacing: -0.06rem; }
-h2 { font-size: 1.4rem !important; letter-spacing: -0.02rem; }
-h3 { font-size: 1.06rem !important; }
-[data-testid="stSidebar"] { border-right: 1px solid #DDE6D9; }
-[data-testid="stMetric"] { background: #FFFFFF; border: 1px solid #DFE7DA; border-radius: 12px; padding: 20px; }
-[data-testid="stMetricLabel"] { color: #607265; font-size: .85rem; }
-[data-testid="stMetricValue"] { font-size: 1.8rem; }
-[data-testid="stFileUploader"] { border-radius: 12px; }
-.eyebrow { font-size: .72rem; text-transform: uppercase; letter-spacing: .17rem; color: #637F62; font-weight: 600; margin-bottom: 10px; }
-.hero { background: #173F30; color: #F4F6EE; padding: 32px; border-radius: 18px; margin: 8px 0 28px; }
-.hero h2 { color: #F4F6EE; font-size: 1.75rem !important; margin-top: 0; }
-.hero p { color: #D7E4D1; max-width: 680px; margin-bottom: 0; line-height: 1.7; }
-.pill { display: inline-block; background: #E9F0DD; color: #2F593D; padding: 5px 11px; border-radius: 20px; font-size: .78rem; }
-.result { background: #FFF; border: 1px solid #DCE5D6; border-left: 4px solid #3D7052; padding: 22px; border-radius: 12px; margin-bottom: 18px; }
-.result strong { font-size: 1.65rem; font-weight: 600; }
-.footnote { font-size: .78rem; color: #708071; padding-top: 20px; }
-div.stButton > button[kind="primary"] { background-color: #246148; border: 0; }
-@media(max-width: 700px) { .block-container { padding-top: 1rem; } .hero { padding: 22px; } h1 { font-size: 1.8rem !important; } }
+/* Keep Streamlit's native top padding: it reserves space for the fixed toolbar.
+   Overriding it with 2.2rem (or 1rem on small screens) hid the page eyebrow. */
+[data-testid="stMainBlockContainer"] {
+  max-width: 1440px;
+  padding-inline: clamp(1.5rem, 3.2vw, 3.5rem);
+  padding-bottom: 3rem;
+}
+[data-testid="stHeader"] {
+  background: #F6F8F3;
+  border-bottom: 1px solid #E4EADF;
+}
+h1, h2, h3 { overflow-wrap: break-word; }
+h1 { font-size: clamp(1.8rem, 2vw + .3rem, 2.35rem) !important; font-weight: 650 !important; line-height: 1.25 !important; letter-spacing: -.045rem; }
+h2 { font-size: 1.4rem !important; line-height: 1.4 !important; letter-spacing: -.02rem; }
+h3 { font-size: 1.1rem !important; line-height: 1.45 !important; }
+.page-intro { margin-bottom: .5rem; }
+.page-intro h1 { margin: 0 0 .7rem; padding: 0; }
+.page-intro > p:last-child { color: #53685B; line-height: 1.65; max-width: 78ch; margin: 0; }
+.eyebrow, .section-label {
+  display: block; font-size: .72rem; line-height: 1.65;
+  text-transform: uppercase; letter-spacing: .12rem; color: #56734F;
+  font-weight: 650; margin: 0 0 .65rem; overflow-wrap: anywhere;
+}
+[data-testid="stSidebar"] { background: #EEF2EA; border-right: 1px solid #DDE6D9; }
+[data-testid="stSidebarUserContent"] { padding: 1.25rem 1.1rem 2rem; }
+.sidebar-brand { display: flex; align-items: center; gap: .65rem; margin: 0 0 .7rem; }
+.sidebar-brand svg { width: 34px; height: 34px; flex: 0 0 34px; }
+.brand-name { color: #173F30; font-size: 1.1rem; font-weight: 700; line-height: 1.5; }
+.brand-tagline { color: #5B7160; font-size: .8rem; line-height: 1.6; margin: 0 0 1.6rem; }
+.nav-label { color: #687C68; font-size: .67rem; line-height: 1.5; letter-spacing: .12rem; font-weight: 650; margin: 0 0 .1rem; }
+[data-testid="stSidebar"] [role="radiogroup"] { gap: .2rem; }
+[data-testid="stSidebar"] label[data-baseweb="radio"] {
+  width: 100%; box-sizing: border-box; margin: 0; padding: .6rem .5rem;
+  border: 1px solid transparent; border-left: 3px solid transparent;
+  border-radius: .55rem; gap: .45rem; align-items: center;
+}
+[data-testid="stSidebar"] label[data-baseweb="radio"] p {
+  font-size: .875rem; line-height: 1.5; white-space: normal; overflow-wrap: break-word;
+}
+[data-testid="stSidebar"] label[data-baseweb="radio"]:hover { background: #E4EBDD; }
+[data-testid="stSidebar"] label[data-baseweb="radio"]:has(input:checked) {
+  background: #DDE8D7; border-color: #D3DFC9; border-left-color: #27634D;
+}
+[data-testid="stSidebar"] label[data-baseweb="radio"]:has(input:checked) p { color: #173F30; font-weight: 650; }
+[data-testid="stSidebar"] label[data-baseweb="radio"]:focus-within { outline: 2px solid #32704F; outline-offset: 2px; }
+.sidebar-note { font-size: .78rem; line-height: 1.65; color: #627461; margin: 0 0 .7rem; }
+.model-status { display: inline-flex; align-items: center; gap: .5rem; font-size: .76rem; color: #2F593D; border: 1px solid #CCDCC3; border-radius: 20px; padding: .35rem .65rem; background: #F6F8F3; }
+.model-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+[data-testid="stMetric"] {
+  background: #FFFFFF; border: 1px solid #DFE7DA; border-radius: 12px;
+  padding: 1.1rem 1.2rem; box-shadow: 0 2px 5px rgba(24,57,45,.025);
+}
+[data-testid="stMetricLabel"] { color: #607265; font-size: .82rem; }
+[data-testid="stMetricLabel"] p { white-space: normal; line-height: 1.5; }
+[data-testid="stMetricValue"] { font-size: clamp(1.4rem, 1.6vw, 1.85rem); line-height: 1.4; }
+[data-testid="stPlotlyChart"] { background: #FFF; border: 1px solid #E1E8DC; border-radius: 14px; box-sizing: border-box; }
+[data-testid="stFileUploaderDropzone"] { background: #F1F5ED; border: 1px dashed #A4BB95; border-radius: 10px; padding: 1.3rem 1rem; }
+.st-key-upload_panel, .st-key-image_preview, .st-key-cnn_result, .st-key-input_panel { background: #FFF; border-radius: 14px; }
+.st-key-image_preview img { max-height: 360px; object-fit: contain; border-radius: 10px; background: #F6F8F3; }
+.st-key-decision_panel { background: #EDF3E8; border-radius: 14px; }
+.workflow-intro { margin-bottom: .85rem; }
+.workflow-intro h3 { margin: 0 0 .35rem; padding: 0; }
+.workflow-intro p { margin: 0; color: #627461; font-size: .9rem; line-height: 1.6; }
+.workflow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.workflow li { background: #FFF; border: 1px solid #DFE7DA; border-radius: 12px; padding: 1.15rem; }
+.step-number { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: #E8EFDC; color: #35583A; font-size: .75rem; font-weight: 700; border-radius: 8px; margin-bottom: .65rem; }
+.workflow h3 { margin: 0 0 .4rem; padding: 0; font-size: 1rem !important; }
+.workflow p { color: #61705F; font-size: .85rem; line-height: 1.65; margin: 0; }
+.supported-materials { font-size: .78rem; color: #677864; line-height: 1.7; margin: 1rem 0 0; }
+.hero { background: #173F30; color: #F4F6EE; padding: 1.7rem 2rem; border-radius: 16px; margin: 0 0 .5rem; }
+.hero h2 { color: #F4F6EE; font-size: 1.65rem !important; margin: .8rem 0 .6rem; padding: 0; }
+.hero p { color: #D7E4D1; max-width: 72ch; margin: 0; line-height: 1.7; }
+.pill { display: inline-block; background: #E9F0DD; color: #2F593D; padding: .3rem .7rem; border-radius: 20px; font-size: .75rem; line-height: 1.5; }
+.empty-state { border: 1px dashed #C9D8BF; background: #F0F4EB; border-radius: 12px; padding: 1.25rem 1.5rem; }
+.empty-state h3 { margin: 0 0 .35rem; padding: 0; }
+.empty-state p { color: #61705F; margin: 0; line-height: 1.7; font-size: .9rem; }
+.result { background: #F2F6EE; border: 1px solid #DCE5D6; border-left: 4px solid #3D7052; padding: 1rem 1.2rem; border-radius: 10px; margin: .25rem 0 .75rem; font-size: .82rem; line-height: 1.7; color: #5B7160; }
+.result strong { display: block; color: #173F30; font-size: 1.65rem; font-weight: 650; line-height: 1.4; }
+.footnote { font-size: .75rem; line-height: 1.7; color: #708071; border-top: 1px solid #E0E7DA; margin-top: 1.5rem; padding-top: 1rem; }
+div.stButton > button, div.stDownloadButton > button { border-radius: 8px; min-height: 2.6rem; font-weight: 600; }
+div.stButton > button[kind="primary"] { background: #246148; border: 1px solid #246148; }
+div.stButton > button[kind="primary"]:hover { background: #173F30; border-color: #173F30; }
+@media (max-width: 700px) {
+  [data-testid="stMainBlockContainer"] { padding-inline: 1rem; }
+  .workflow { grid-template-columns: 1fr; gap: .7rem; }
+  .workflow li { padding: 1rem; }
+  .hero { padding: 1.3rem; }
+  [data-testid="stMetric"] { padding: 1rem; }
+}

@@ -6,12 +6,14 @@ from smartwaste.fuzzy_engine import membership
 COLORS = {"Low": "#829889", "Medium": "#B5A443", "High": "#22694D"}
 
 
-def style(figure, title, height=290):
-    figure.update_layout(title=dict(text=title, font_size=16), height=height,
+def style(figure, title, height=330):
+    figure.update_layout(title=dict(text=title, font_size=15, x=0.04, y=0.96), height=height,
                          paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                         font=dict(color="#18392D"), margin=dict(l=15, r=15, t=50, b=75),
-                         legend=dict(orientation="h", y=-0.3, yanchor="top"),
-                         xaxis=dict(showgrid=False), yaxis=dict(gridcolor="#DFE7DD"))
+                         font=dict(color="#18392D", family="Segoe UI, Arial, sans-serif", size=12),
+                         margin=dict(l=55, r=25, t=95, b=65),
+                         legend=dict(orientation="h", y=1.06, yanchor="bottom", x=0, font_size=11),
+                         xaxis=dict(showgrid=False, automargin=True),
+                         yaxis=dict(gridcolor="#E4EBDF", automargin=True))
     return figure
 
 

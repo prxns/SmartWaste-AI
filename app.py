@@ -1,6 +1,7 @@
 """SmartWaste AI local Streamlit application. Run: streamlit run app.py."""
 from datetime import datetime, timezone
 from hashlib import sha256
+from html import escape
 import json
 from pathlib import Path
 import pandas as pd
@@ -13,7 +14,7 @@ from smartwaste.recommendations import guidance
 from smartwaste.charts import membership_chart, aggregate_chart, style
 
 st.set_page_config(page_title="SmartWaste AI", page_icon="assets/icon.svg", layout="wide")
-st.markdown(f"<style>{(ROOT/'assets/style.css').read_text()}</style>", unsafe_allow_html=True)
+st.markdown(f"<style>{(ROOT/'assets/style.css').read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
 
 PAGES = ("Dashboard", "Waste Classification", "Fuzzy Logic Laboratory", "Model Evaluation", "About & Methodology")
 TRAIN_COMMAND = "python -m scripts.download_dataset\npython -m scripts.train_model --epochs 12"
@@ -30,15 +31,16 @@ def navigate_classifier():
 
 
 def introduction(title, description, label):
-    st.markdown(f'<div class="eyebrow">{label}</div>', unsafe_allow_html=True)
-    st.title(title)
-    st.write(description)
+    st.markdown(
+        f'<header class="page-intro"><p class="eyebrow">{escape(label)}</p>'
+        f'<h1>{escape(title)}</h1><p>{escape(description)}</p></header>',
+        unsafe_allow_html=True)
 
 
 def fuzzy_details(result):
     c1, c2 = st.columns(2)
     c1.plotly_chart(membership_chart(result, "Material potential", result.potential), width="stretch")
-    c2.plotly_chart(membership_chart(result, "User contamination assessment", result.contamination), width="stretch")
+    c2.plotly_chart(membership_chart(result, "Contamination", result.contamination), width="stretch")
     st.plotly_chart(aggregate_chart(result), width="stretch")
     a, b = st.columns([1, 2])
     with a:
@@ -61,7 +63,7 @@ def dashboard():
     columns[2].metric("Material categories seen", history.category.nunique() if len(history) else 0)
     st.button("Open waste classifier", type="primary", on_click=navigate_classifier)
     if history.empty:
-        st.info("Your session is empty. Classify an image to build a real activity summary.")
+        st.markdown('<div class="empty-state"><h3>Your session starts here</h3><p>Classify a photograph to see your material distribution, suitability summary and recent activity. Only your actual results appear here.</p></div>', unsafe_allow_html=True)
     else:
         a,b = st.columns(2)
         counts = history.category.value_counts().rename_axis("Category").reset_index(name="Count")
@@ -78,10 +80,22 @@ def dashboard():
 
 
 def classify():
-    introduction("Classify a waste image", "One object. A clear background. A transparent decision process.", "SmartWaste AI / Classifier")
-    upload = st.file_uploader("Upload a JPEG or PNG", type=["jpg", "jpeg", "png"], help="Maximum 10 MB and 24 megapixels. Contamination is entered manually.")
+    introduction("Classify a waste image", "Identify the material, assess contamination and explore an explained recycling decision.", "SmartWaste AI / Classifier")
+    with st.container(border=True, key="upload_panel"):
+        st.subheader("Your waste photograph")
+        upload = st.file_uploader("Upload a JPEG or PNG", type=["jpg", "jpeg", "png"], help="Maximum 10 MB and 24 megapixels. Contamination is entered manually.")
+        st.caption("For a useful prediction, photograph one item in even light against a clear background. Keep the whole item in view. Maximum 10 MB / 24 megapixels.")
     if upload is None:
         st.session_state.pop("prediction", None)
+        st.markdown(
+            '<div class="workflow-intro"><h3>From photograph to recycling guidance</h3>'
+            '<p>Your image preview and analysis will appear here after upload.</p></div>'
+            '<ol class="workflow" aria-label="Classification workflow">'
+            '<li><span class="step-number">01</span><h3>Upload one item</h3><p>Choose a clear photograph of the waste material you want to identify.</p></li>'
+            '<li><span class="step-number">02</span><h3>Classify the material</h3><p>Run the CNN and review its three highest material prediction scores.</p></li>'
+            '<li><span class="step-number">03</span><h3>Assess suitability</h3><p>Set contamination yourself. Mamdani fuzzy logic explains the resulting decision score.</p></li></ol>'
+            '<p class="supported-materials">Supported materials: cardboard, glass, metal, paper, plastic and trash. Photographs stay in memory during your session.</p>',
+            unsafe_allow_html=True)
         if not MODEL_PATH.is_file():
             st.info("The trained CNN is not available yet. The fuzzy laboratory works independently.")
             st.code(TRAIN_COMMAND, language="bash")
@@ -95,18 +109,19 @@ def classify():
     except ValueError as exc:
         st.error(str(exc)); return
     left, right = st.columns([1, 1.15], gap="large")
-    with left:
-        st.image(image, caption=f"Uploaded image · {image.width} × {image.height} pixels", width="stretch")
+    with left, st.container(border=True, key="image_preview"):
+        st.subheader("Uploaded photograph")
+        st.image(image, caption=f"Uploaded image · {image.width} x {image.height} pixels", width="stretch")
         st.caption("The model was trained on individual items on simple backgrounds. Mixed waste or unrelated images can still produce a score.")
-    with right:
+    with right, st.container(border=True, key="cnn_result"):
         st.subheader("1 · CNN material classification")
         if not MODEL_PATH.is_file():
             st.warning("No trained model found. Train the CNN before classifying images.")
             st.code(TRAIN_COMMAND, language="bash")
             return
-        if st.button("Classify image", type="primary"):
+        if st.button("Classify image", type="primary", width="stretch"):
             try:
-                with st.spinner("Analyzing material with MobileNetV2…"):
+                with st.spinner("Analyzing material with MobileNetV2."):
                     prediction = load_classifier(MODEL_PATH.stat().st_mtime_ns).predict(image)
                 prediction.update(image_hash=digest, activity_id=len(st.session_state.history)+1)
                 st.session_state.prediction = prediction
@@ -119,34 +134,39 @@ def classify():
                 st.error(f"Classification could not run: {exc}")
         prediction = st.session_state.get("prediction")
         if prediction is None:
+            st.markdown('<div class="empty-state"><h3>Ready for analysis</h3><p>Select Classify image to identify the material. Your prediction scores and recycling assessment will follow.</p></div>', unsafe_allow_html=True)
             return
         category = prediction["category"]
-        st.markdown(f'<div class="result">Predicted material<br><strong>{category.title()}</strong></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="result">Predicted material<strong>{category.title()}</strong></div>', unsafe_allow_html=True)
         scores = pd.DataFrame(prediction["top_three"])
         st.dataframe(scores, hide_index=True, width="stretch", column_config={"score": st.column_config.ProgressColumn("Prediction score", min_value=0,max_value=1,format="%.3f")})
-        st.caption(f"Uncalibrated softmax scores, not guaranteed correctness. CNN input: {' × '.join(map(str,prediction['input_dimensions']))}.")
-    st.divider()
-    st.subheader("2 · Fuzzy recycling decision support")
-    contamination = st.slider("Contamination level — your manual assessment", 0, 100, 20, key=f"contamination_{prediction['activity_id']}", help="0 = visibly clean; 100 = heavily contaminated. The CNN does not detect contamination.")
-    result = infer(MATERIAL_POTENTIAL[category], contamination)
-    a,b,c = st.columns(3)
-    a.metric("Material potential assumption", f"{result.potential:.0f} / 100")
-    b.metric("User contamination input", f"{contamination} / 100")
-    c.metric(f"{result.status} suitability", f"{result.score:.2f} / 100")
-    st.info(guidance(category, result.status))
-    st.caption("Material potential values are illustrative academic assumptions. Suitability is a fuzzy decision score, not an empirical recycling rate or local acceptance guarantee.")
-    for row in st.session_state.history:
-        if row["id"] == prediction["activity_id"]:
-            row.update(contamination=contamination, suitability=result.score)
-    with st.expander("Inspect the fuzzy inference calculation"):
-        fuzzy_details(result)
+        st.caption(f"Uncalibrated softmax scores, not guaranteed correctness. CNN input: {' x '.join(map(str,prediction['input_dimensions']))}.")
+    with st.container(border=True, key="decision_panel"):
+        st.subheader("2 · Fuzzy recycling decision support")
+        st.caption("The CNN identifies material. You provide contamination; the fuzzy engine calculates suitability.")
+        contamination = st.slider("Contamination level - your manual assessment", 0, 100, 20, key=f"contamination_{prediction['activity_id']}", help="0 = visibly clean; 100 = heavily contaminated. The CNN does not detect contamination.")
+        result = infer(MATERIAL_POTENTIAL[category], contamination)
+        a,b,c = st.columns(3)
+        a.metric("Material potential assumption", f"{result.potential:.0f} / 100")
+        b.metric("User contamination input", f"{contamination} / 100")
+        c.metric(f"{result.status} suitability", f"{result.score:.2f} / 100")
+        st.info(guidance(category, result.status))
+        st.caption("Material potential values are illustrative academic assumptions. Suitability is a fuzzy decision score, not an empirical recycling rate or local acceptance guarantee.")
+        for row in st.session_state.history:
+            if row["id"] == prediction["activity_id"]:
+                row.update(contamination=contamination, suitability=result.score)
+        with st.expander("Inspect the fuzzy inference calculation"):
+            fuzzy_details(result)
 
 
 def laboratory():
     introduction("Fuzzy Logic Laboratory", "Adjust both inputs independently and inspect a complete Mamdani inference trace.", "SmartWaste AI / Explainability")
-    a,b = st.columns(2)
-    potential = a.slider("Material recyclability potential", 0, 100, 80)
-    contamination = b.slider("Contamination level", 0, 100, 20)
+    with st.container(border=True, key="input_panel"):
+        st.subheader("Explore the two inputs")
+        a,b = st.columns(2)
+        potential = a.slider("Material recyclability potential", 0, 100, 80)
+        contamination = b.slider("Contamination level", 0, 100, 20)
+        st.caption("Both inputs are independent here. Every change recalculates the rules and centroid immediately.")
     result = infer(potential, contamination)
     c,d,e = st.columns(3)
     c.metric("Centroid suitability", f"{result.score:.2f} / 100")
@@ -177,15 +197,18 @@ def evaluation():
         for col, key, title in zip(columns, ["test_accuracy","macro_precision","macro_recall","macro_f1"], ["Test accuracy","Macro precision","Macro recall","Macro F1"]):
             col.metric(title, f"{metrics[key]:.1%}")
         st.caption(f"Untouched test split · {metrics['test_samples']} images · best checkpoint selected only on validation loss.")
+        st.subheader("Per-class performance")
         report = pd.DataFrame(metrics["classification_report"]).T
         st.dataframe(report.loc[list(CLASS_NAMES)], width="stretch")
         matrix = px.imshow(metrics["confusion_matrix"], x=list(CLASS_NAMES), y=list(CLASS_NAMES), text_auto=True, color_continuous_scale="Greens", labels=dict(x="Predicted",y="Actual",color="Images"))
         st.plotly_chart(style(matrix,"Test confusion matrix",430), width="stretch")
+        st.subheader("Training history")
         history = pd.DataFrame(json.loads((RESULTS_DIR/"history.json").read_text()))
         history.index = history.index+1
         a,b = st.columns(2)
         a.plotly_chart(style(px.line(history, y=["accuracy","val_accuracy"], labels={"index":"Epoch","value":"Accuracy"}),"Training and validation accuracy"), width="stretch")
         b.plotly_chart(style(px.line(history, y=["loss","val_loss"], labels={"index":"Epoch","value":"Loss"}),"Training and validation loss"), width="stretch")
+        st.subheader("Dataset distribution")
         distribution = pd.read_csv(RESULTS_DIR/"class_distribution.csv")
         st.plotly_chart(style(px.bar(distribution,x="category",y="count",color_discrete_sequence=["#32704F"]),"Validated dataset distribution"), width="stretch")
         with st.expander("Training configuration and provenance"):
@@ -214,11 +237,11 @@ def methodology():
 
 st.session_state.setdefault("history", [])
 with st.sidebar:
-    st.markdown("### SmartWaste AI")
-    st.caption("CLASSIFY. ASSESS. UNDERSTAND.")
+    brand_icon = (ROOT/"assets/icon.svg").read_text(encoding="utf-8")
+    st.markdown(f'<div class="sidebar-brand">{brand_icon}<span class="brand-name">SmartWaste AI</span></div><p class="brand-tagline">Intelligent waste classification<br>and recycling decision support.</p><p class="nav-label">WORKSPACE</p>', unsafe_allow_html=True)
     st.radio("Workspace", PAGES, key="page", label_visibility="collapsed")
     st.divider()
-    st.caption("Academic prototype\n\nSix material classes · Explainable fuzzy decisions")
-    st.caption("CNN ready" if MODEL_PATH.is_file() else "CNN training required")
+    st.markdown('<p class="sidebar-note">Academic prototype<br>Six material classes. Explainable fuzzy decisions.</p>', unsafe_allow_html=True)
+    st.markdown(f'<span class="model-status">{"CNN ready" if MODEL_PATH.is_file() else "CNN training required"}</span>', unsafe_allow_html=True)
 dict(zip(PAGES, (dashboard, classify, laboratory, evaluation, methodology)))[st.session_state.page]()
 st.markdown('<div class="footnote">SmartWaste AI · Academic decision support · Confirm local disposal and recycling rules.</div>', unsafe_allow_html=True)

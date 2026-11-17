@@ -1,5 +1,6 @@
 """Capture actual application pages for the report (optional Playwright dependency)."""
 import argparse
+import base64
 import os
 import subprocess
 import sys
@@ -8,10 +9,66 @@ from urllib.request import urlopen
 from config import ROOT
 
 
+def inspect_layout(page, label):
+    """Check real browser geometry; never mask overflow to make this pass."""
+    page.get_by_test_id("stMain").evaluate("element => { element.scrollTop = 0; }")
+    geometry=page.evaluate("""() => {
+        const main=document.querySelector('[data-testid="stMain"]');
+        const toolbar=document.querySelector('[data-testid="stHeader"]');
+        const eyebrow=document.querySelector('.eyebrow');
+        const brand=document.querySelector('.sidebar-brand');
+        const heading=document.querySelector('.page-intro h1');
+        const nav=[...document.querySelectorAll('[data-testid="stSidebar"] label[data-baseweb="radio"]')];
+        return {
+            viewport: innerWidth,
+            documentWidth: document.documentElement.scrollWidth,
+            mainWidth: main.clientWidth,
+            mainScrollWidth: main.scrollWidth,
+            eyebrowTop: eyebrow.getBoundingClientRect().top,
+            toolbarBottom: toolbar.getBoundingClientRect().bottom,
+            headingTop: heading.getBoundingClientRect().top,
+            eyebrowBottom: eyebrow.getBoundingClientRect().bottom,
+            brandClipped: brand.scrollWidth > brand.clientWidth + 1,
+            navCount: nav.length,
+            navClipped: nav.some(el => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1),
+            zoom: devicePixelRatio,
+        };
+    }""")
+    assert geometry["documentWidth"] <= geometry["viewport"]+1, (label,geometry)
+    assert geometry["mainScrollWidth"] <= geometry["mainWidth"]+1, (label,geometry)
+    assert geometry["eyebrowTop"] >= geometry["toolbarBottom"]+4, (label,geometry)
+    assert geometry["headingTop"] >= geometry["eyebrowBottom"], (label,geometry)
+    assert not geometry["brandClipped"] and not geometry["navClipped"], (label,geometry)
+    assert geometry["navCount"] == 5 and geometry["zoom"] == 1, (label,geometry)
+    print("Layout verified:",label,geometry)
+
+
+def responsive_pages(page, target, wait_until_idle, classified=False):
+    pages=[("Waste Classification","classification_result")] if classified else [
+        ("Dashboard","dashboard"),("Waste Classification","classification_empty"),
+        ("Fuzzy Logic Laboratory","fuzzy_laboratory"),("Model Evaluation","model_evaluation"),
+        ("About & Methodology","methodology")]
+    review=target/"responsive"; review.mkdir(exist_ok=True)
+    for width,height in ((1920,1080),(1366,768),(1280,720)):
+        page.set_viewport_size({"width":width,"height":height})
+        for label,filename in pages:
+            page.get_by_text(label,exact=True).first.click()
+            wait_until_idle(page)
+            if page.get_by_test_id("stException").count():
+                raise RuntimeError(f"Application exception on {label} at {width}x{height}")
+            inspect_layout(page,f"{filename} {width}x{height}")
+            page.screenshot(path=str(review/f"{filename}_{width}x{height}.png"),full_page=True)
+    page.set_viewport_size({"width":1440,"height":1050})
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--windows-launcher",action="store_true",
                         help="Exercise the installed Windows run.bat launcher.")
+    parser.add_argument("--responsive",action="store_true",
+                        help="Check all five sections at the three demonstration resolutions.")
+    parser.add_argument("--review-previews",action="store_true",
+                        help="Include actual screenshots in CI logs for offline visual review.")
     args=parser.parse_args()
     if args.windows_launcher and os.name!="nt":
         parser.error("--windows-launcher requires Windows")
@@ -44,16 +101,22 @@ def main():
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
             wait_until_idle(page)
             page.screenshot(path=str(target/"dashboard.png"),full_page=False)
+            if args.responsive:
+                responsive_pages(page,target,wait_until_idle)
             # Exercise a real held-out image through the browser, not a mock prediction.
             import pandas as pd
             test=pd.read_csv(ROOT/"results/splits.csv")
             sample=test[test.split=="test"].iloc[0]
             page.get_by_text("Waste Classification",exact=True).first.click()
+            wait_until_idle(page)
+            page.screenshot(path=str(target/"classification_empty.png"),full_page=False)
             page.locator('input[type="file"]').set_input_files(str(ROOT/"data/dataset-resized"/sample.path))
             page.get_by_role("button",name="Classify image",exact=True).click()
             page.get_by_role("heading",name="2 · Fuzzy recycling decision support",exact=True).wait_for(timeout=60000)
             wait_until_idle(page)
             page.screenshot(path=str(target/"classification.png"),full_page=False)
+            if args.responsive:
+                responsive_pages(page,target,wait_until_idle,classified=True)
             slider=page.get_by_role("slider")
             # BaseWeb's slider implements arrow keys; End is not portable.
             for _ in range(80):
@@ -65,13 +128,18 @@ def main():
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
             wait_until_idle(page)
             page.screenshot(path=str(target/"dashboard.png"),full_page=False)
-            for label,filename in [("Fuzzy Logic Laboratory","fuzzy_laboratory.png"),("Model Evaluation","model_evaluation.png")]:
+            for label,filename in [("Fuzzy Logic Laboratory","fuzzy_laboratory.png"),("Model Evaluation","model_evaluation.png"),("About & Methodology","methodology.png")]:
                 page.get_by_text(label,exact=True).first.click()
-                page.get_by_role("heading",name="Fuzzy Logic Laboratory" if filename.startswith("fuzzy") else "Model evaluation",exact=True).wait_for()
+                page.get_by_role("heading",name={"fuzzy_laboratory.png":"Fuzzy Logic Laboratory","model_evaluation.png":"Model evaluation","methodology.png":"About & methodology"}[filename],exact=True).wait_for()
                 wait_until_idle(page)
                 if page.get_by_test_id("stException").count(): raise RuntimeError("Application rendered an exception.")
                 page.screenshot(path=str(target/filename),full_page=False)
             browser.close()
+            if args.review_previews:
+                for path in sorted(target.glob("*.png")):
+                    encoded=base64.b64encode(path.read_bytes()).decode("ascii")
+                    for index,offset in enumerate(range(0,len(encoded),60000)):
+                        print(f"UI_PREVIEW {path.name} {index} {encoded[offset:offset+60000]}")
     finally:
         if os.name=="nt":
             # A .bat launcher has a child Python process; stop only this test's tree.

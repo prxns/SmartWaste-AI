@@ -41,7 +41,7 @@ jobs:
           if errorlevel 1 exit /b 1
           .venv\Scripts\python.exe -m playwright install chromium
       - name: Exercise run.bat, image upload, real inference and contamination changes
-        run: .venv\Scripts\python.exe -m scripts.capture_screenshots --windows-launcher
+        run: .venv\Scripts\python.exe -m scripts.capture_screenshots --windows-launcher --responsive --review-previews
       - uses: actions/upload-artifact@v4
         if: success()
         with:
