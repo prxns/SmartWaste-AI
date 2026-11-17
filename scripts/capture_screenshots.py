@@ -25,7 +25,7 @@ def main():
             page=browser.new_page(viewport={"width":1440,"height":1050},device_scale_factor=1)
             page.goto("http://localhost:8510",wait_until="networkidle")
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
-            page.screenshot(path=str(target/"dashboard.png"),full_page=True)
+            page.screenshot(path=str(target/"dashboard.png"),full_page=False)
             # Exercise a real held-out image through the browser, not a mock prediction.
             import pandas as pd
             test=pd.read_csv(ROOT/"results/splits.csv")
@@ -34,18 +34,18 @@ def main():
             page.locator('input[type="file"]').set_input_files(str(ROOT/"data/dataset-resized"/sample.path))
             page.get_by_role("button",name="Classify image",exact=True).click()
             page.get_by_role("heading",name="2 · Fuzzy recycling decision support",exact=True).wait_for(timeout=60000)
-            page.screenshot(path=str(target/"classification.png"),full_page=True)
+            page.screenshot(path=str(target/"classification.png"),full_page=False)
             page.get_by_role("slider").press("End")
             page.get_by_text("Low suitability",exact=True).wait_for()
             page.get_by_text("Dashboard",exact=True).first.click()
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
-            page.screenshot(path=str(target/"dashboard.png"),full_page=True)
+            page.screenshot(path=str(target/"dashboard.png"),full_page=False)
             for label,filename in [("Fuzzy Logic Laboratory","fuzzy_laboratory.png"),("Model Evaluation","model_evaluation.png")]:
                 page.get_by_text(label,exact=True).first.click()
                 page.get_by_role("heading",name="Fuzzy Logic Laboratory" if filename.startswith("fuzzy") else "Model evaluation",exact=True).wait_for()
                 page.wait_for_timeout(1500)
                 if page.get_by_test_id("stException").count(): raise RuntimeError("Application rendered an exception.")
-                page.screenshot(path=str(target/filename),full_page=True)
+                page.screenshot(path=str(target/filename),full_page=False)
             browser.close()
     finally:
         process.terminate()

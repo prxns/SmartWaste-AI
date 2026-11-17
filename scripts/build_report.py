@@ -80,6 +80,10 @@ def build_docx(text,destination):
         if line.startswith("# "):
             document.add_heading(line[2:],0); title_done=True
             i+=1; continue
+        if line.startswith(("Student:", "Roll number:", "Programme and department:",
+                            "Institution:", "Supervisor:", "Academic year:")):
+            document.add_paragraph(line)
+            i+=1; continue
         if line.startswith("## "):
             if line.startswith("## 1 "):
                 document.add_page_break()
@@ -93,6 +97,7 @@ def build_docx(text,destination):
             path=(ROOT/"docs"/image[2]).resolve()
             if path.is_file():
                 paragraph=document.add_paragraph(); paragraph.alignment=1
+                paragraph.paragraph_format.keep_with_next=True
                 picture=paragraph.add_run().add_picture(str(path),width=Inches(6.3))
                 picture._inline.docPr.set("descr",image[1])
                 caption=document.add_paragraph(image[1],style="Caption"); caption.alignment=1
@@ -127,7 +132,13 @@ def build_docx(text,destination):
     if screenshots:
         document.add_page_break(); document.add_heading("Application screenshots",1)
         for path in screenshots:
-            document.add_picture(str(path),width=Inches(6.3))
+            from PIL import Image
+            with Image.open(path) as image:
+                width,height=image.size
+            scale=min(6.3/width,7.5/height)
+            paragraph=document.add_paragraph()
+            paragraph.paragraph_format.keep_with_next=True
+            paragraph.add_run().add_picture(str(path),width=Inches(width*scale),height=Inches(height*scale))
             document.add_paragraph(path.stem.replace("_"," ").title(),style="Caption")
     document.save(destination)
     print(f"Generated {destination}")

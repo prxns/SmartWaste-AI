@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       TF_CPP_MIN_LOG_LEVEL: '2'
@@ -35,50 +35,62 @@ jobs:
     # Public-repository CPU training; no paid service or credentials required.
     if: github.event_name != 'pull_request'
     needs: tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
       contents: write
+      actions: read
     env:
       TF_CPP_MIN_LOG_LEVEL: '2'
       TF_ENABLE_ONEDNN_OPTS: '0'
       MPLBACKEND: Agg
     steps:
       - uses: actions/checkout@v4
+      - id: initial
+        run: |
+          if [ -f models/smartwaste.keras ]; then echo 'missing=false' >> "$GITHUB_OUTPUT"; else echo 'missing=true' >> "$GITHUB_OUTPUT"; fi
+      - name: Recover the successfully trained checkpoint from the previous run
+        if: steps.initial.outputs.missing == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: smartwaste-demonstration
+          run-id: 44157444636
+          github-token: ${{ github.token }}
+          path: .
       - id: model
         shell: bash
         run: |
           if [ -f models/smartwaste.keras ]; then echo 'missing=false' >> "$GITHUB_OUTPUT"; else echo 'missing=true' >> "$GITHUB_OUTPUT"; fi
       - uses: actions/setup-python@v5
-        if: steps.model.outputs.missing == 'true'
+        if: steps.initial.outputs.missing == 'true'
         with:
           python-version: '3.11'
           cache: pip
-      - if: steps.model.outputs.missing == 'true'
+      - if: steps.initial.outputs.missing == 'true'
         run: python -m pip install -r requirements.txt
-      - if: steps.model.outputs.missing == 'true'
+      - if: steps.initial.outputs.missing == 'true'
         run: python -m scripts.download_dataset
       - if: steps.model.outputs.missing == 'true'
         run: python -m scripts.train_model --epochs 12 --threads 2
-      - if: steps.model.outputs.missing == 'true'
+      - if: steps.initial.outputs.missing == 'true'
         run: python -m pytest -q
       - name: Capture real application screenshots
-        if: steps.model.outputs.missing == 'true'
+        if: steps.initial.outputs.missing == 'true'
         run: |
           python -m pip install playwright==1.56.0
           python -m playwright install --with-deps chromium
           python -m scripts.capture_screenshots
-      - if: steps.model.outputs.missing == 'true'
+      - if: steps.initial.outputs.missing == 'true'
         run: python -m scripts.build_report
       - name: Render the academic report for page layout review
-        if: steps.model.outputs.missing == 'true'
+        if: steps.initial.outputs.missing == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y libreoffice-writer poppler-utils
           mkdir -p report-preview
           libreoffice -env:UserInstallation=file:///tmp/smartwaste-report-lo --headless --convert-to pdf --outdir report-preview docs/SmartWaste_AI_Project_Report.docx
           pdftoppm -scale-to 1600 -png report-preview/SmartWaste_AI_Project_Report.pdf report-preview/page
-      - if: always() && steps.model.outputs.missing == 'true'
+      - if: always() && steps.initial.outputs.missing == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: smartwaste-demonstration
@@ -91,7 +103,7 @@ jobs:
             report-preview/
           if-no-files-found: warn
       - name: Save validated model and actual evaluation to existing repository
-        if: success() && steps.model.outputs.missing == 'true' && github.ref == 'refs/heads/main'
+        if: success() && steps.initial.outputs.missing == 'true' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
@@ -99,3 +111,7 @@ jobs:
           git add models results docs assets/figures assets/screenshots
           git commit -m 'Add trained MobileNetV2 model and held-out evaluation'
           git push origin HEAD:main
+          git switch -c codex/report-layout-preview
+          git add report-preview
+          git commit -m 'Capture academic report pages for layout validation'
+          git push origin HEAD:codex/report-layout-preview
