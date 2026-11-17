@@ -27,3 +27,9 @@ The full post-training Pytest suite completed with **34 passed, 2 xfailed and 6 
 The first archive validation correctly halted on contradictory image labels. A dedicated regression now verifies that every member of an ambiguous group is excluded without inventing a preferred label. A later browser-capture step failed because pinned Playwright did not support `ubuntu-latest`, which had moved to Ubuntu 26.04. The trained and tested model was preserved as an Actions artifact. Recovery uses that checkpoint on an explicitly pinned Ubuntu 24.04 runner; it does not repeat training or alter the held-out metrics.
 
 Local Git object writes are also restricted. Commits and ordinary fast-forward updates are made through the connected GitHub integration. No force push, repository visibility change, credential file or raw dataset is committed.
+
+## Browser and document verification
+
+Run `44161441051` completed successfully on Ubuntu 24.04. It recovered the already-trained checkpoint without retraining, passed all post-training tests again, uploaded a genuine held-out image through the running Streamlit UI, obtained a real prediction, changed contamination using the slider, and captured the classifier, populated dashboard, fuzzy laboratory and evaluation page. The generated Word report incorporated the measured metrics and real screenshots and rendered successfully to PDF and page images for layout review.
+
+The first browser interaction attempted the End key, which the slider did not implement. The corrected check uses the supported arrow keys and passed. Page review identified an inherited decorative title border and a sparse final reference page; the report generator removes the border and starts references on a new page. Model evaluation remains unchanged.

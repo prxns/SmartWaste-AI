@@ -69,6 +69,11 @@ def build_docx(text,destination):
     for name in ("Title","Heading 1","Heading 2"):
         style=document.styles[name]
         style.font.name="Calibri"; style.font.color.rgb=RGBColor(0,0,0)
+    # Some Word templates inherit a blue title rule. Remove paragraph borders
+    # explicitly so both Word and LibreOffice render a plain academic title.
+    for border in list(document.styles.element.xpath(".//w:pBdr")):
+        border.getparent().remove(border)
+    document.styles["Caption"].font.color.rgb=RGBColor(0,0,0)
     document.styles["Title"].font.size=Pt(28)
     document.styles["Heading 1"].font.size=Pt(16)
     document.styles["Heading 2"].font.size=Pt(12)
@@ -85,6 +90,8 @@ def build_docx(text,destination):
             document.add_paragraph(line)
             i+=1; continue
         if line.startswith("## "):
+            if line.startswith("## 28 "):
+                document.add_page_break()
             if line.startswith("## 1 "):
                 document.add_page_break()
                 document.add_heading("Contents",1)
@@ -109,8 +116,11 @@ def build_docx(text,destination):
                 if not all(re.fullmatch(r":?-+:?",x) for x in row): table_lines.append(row)
                 i+=1
             if table_lines:
-                table=document.add_table(rows=1,cols=len(table_lines[0])); table.style="Light Shading Accent 1"
+                table=document.add_table(rows=1,cols=len(table_lines[0])); table.style="Table Grid"
                 for cell,label in zip(table.rows[0].cells,table_lines[0]): cell.text=label
+                for cell in table.rows[0].cells:
+                    shading=OxmlElement("w:shd"); shading.set(qn("w:fill"),"EAF0E7")
+                    cell._tc.get_or_add_tcPr().append(shading)
                 header=OxmlElement("w:tblHeader"); table.rows[0]._tr.get_or_add_trPr().append(header)
                 for row in table_lines[1:]:
                     for cell,value in zip(table.add_row().cells,row): cell.text=value.replace("`","")
@@ -118,7 +128,8 @@ def build_docx(text,destination):
                     for cell in row.cells:
                         for paragraph in cell.paragraphs:
                             paragraph.paragraph_format.space_after=Pt(4)
-                            for run in paragraph.runs: run.font.size=Pt(9)
+                            for run in paragraph.runs:
+                                run.font.size=Pt(9); run.font.color.rgb=RGBColor(0,0,0)
                 document.add_paragraph()
             continue
         parts=[line]

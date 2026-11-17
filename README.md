@@ -56,6 +56,19 @@ The pipeline saves the best Keras checkpoint, original class mapping, configurat
 python -m scripts.evaluate_model
 ```
 
+## Recorded CNN results
+
+The actual seeded run trained for 12 epochs and selected the best validation-loss checkpoint. The held-out test set contains **379 images**, separate from training and checkpoint selection.
+
+| Held-out metric | Actual value |
+|---|---:|
+| Accuracy | 81.53% |
+| Macro precision | 77.73% |
+| Macro recall | 78.21% |
+| Macro F1 | 77.70% |
+
+The resized archive is **42,834,870 bytes (40.85 MiB)**. It contains 2,527 images; deduplication and conflicting-label quarantine retain **2,521 unique unambiguous images**. Full numeric results, class reports, image exclusions, model hashes and the split manifest are in `results/`. These are measured prototype results, not guarantees for real-world waste scenes.
+
 ## Fuzzy inference and a specification limitation
 
 Illustrative material potentials in `config.py`: cardboard 80, glass 85, metal 90, paper 75, plastic 60, trash 15. These values are normalized academic assumptions, not measured recycling rates. Contamination is manually set from 0 to 100.
