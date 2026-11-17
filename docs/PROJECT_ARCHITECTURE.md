@@ -46,7 +46,7 @@ flowchart TD
   R --> D["Metrics charts and report"]
 ```
 
-The test set is touched only after fitting/checkpoint selection. `splits.csv` preserves relative image paths, decoded hashes, category indices, dimensions and assignments. Exact duplicate images are excluded before splitting. Near duplicates remain a stated limitation. `training_config.json` records software versions, seed, class weights and split sizes. `metrics.json` stores the checkpoint and split SHA-256 digests. Re-evaluation verifies the dataset against the saved hashes.
+The test set is touched only after fitting/checkpoint selection. `splits.csv` preserves relative image paths, decoded hashes, category indices, dimensions and assignments. Exact duplicate images are excluded before splitting. All members of groups with contradictory category labels are quarantined, and exclusion reasons are recorded in `dataset_audit.json`. Near duplicates remain a stated limitation. `training_config.json` records software versions, seed, class weights and split sizes. `metrics.json` stores the checkpoint and split SHA-256 digests. Re-evaluation verifies the dataset against the saved hashes.
 
 ## Application state and privacy
 

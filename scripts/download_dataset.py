@@ -89,6 +89,8 @@ def main():
         metadata = {"source": DATASET_URL, "archive_bytes": archive.stat().st_size,
                     "archive_sha256": archive_hash, "unique_images": len(frame),
                     "class_distribution": frame.category.value_counts().sort_index().to_dict(),
+                    "raw_class_distribution": frame.attrs["raw_class_distribution"],
+                    "excluded_images": frame.attrs["excluded_images"],
                     "attribution": "Gary Thung and Mindy Yang, TrashNet"}
         (RESULTS_DIR / "dataset.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
         print(json.dumps(metadata, indent=2))

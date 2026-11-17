@@ -65,6 +65,7 @@ def main():
     validation = splits[splits.split == "validation"]
     test = splits[splits.split == "test"]
     MODEL_DIR.mkdir(exist_ok=True); RESULTS_DIR.mkdir(exist_ok=True)
+    (RESULTS_DIR/"dataset_audit.json").write_text(json.dumps(frame.attrs, indent=2), encoding="utf-8")
     splits.to_csv(RESULTS_DIR/"splits.csv", index=False)
     frame.category.value_counts().sort_index().rename("count").to_csv(RESULTS_DIR/"class_distribution.csv")
     weights = compute_class_weight("balanced", classes=np.arange(6), y=train.label)

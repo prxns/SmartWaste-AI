@@ -18,6 +18,9 @@ def update_evidence(text):
         content=(f"The downloaded resized ZIP contains {data['archive_bytes']:,} bytes "
                  f"({data['archive_bytes']/1024/1024:.2f} MiB). The validated inventory has {data['unique_images']:,} unique decoded images. "
                  f"Archive SHA-256: `{data['archive_sha256']}`.\n\n| Category | Validated images |\n|---|---:|\n{rows}")
+        if "raw_class_distribution" in data:
+            content+="\n\nRaw archive folder counts: "+", ".join(f"{k} {v}" for k,v in data["raw_class_distribution"].items())+"."
+            content+=f" A total of {len(data.get('excluded_images', []))} files were excluded as exact duplicates or members of conflicting-label duplicate groups. Full paths, hashes and reasons are recorded in the dataset metadata; no conflicting label is chosen arbitrarily."
         text=replace_block(text,"DATASET",content)
     if (RESULTS_DIR/"metrics.json").is_file() and MODEL_PATH.is_file():
         from smartwaste.evaluation import file_sha256

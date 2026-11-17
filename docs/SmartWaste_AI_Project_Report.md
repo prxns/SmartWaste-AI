@@ -85,7 +85,7 @@ TrashNet [1] supplies the six original labels. The upstream repository describes
 No archive has been downloaded in this environment. The downloader will record its exact byte count, SHA-256 and actual validated class distribution in `results/dataset.json`. Upstream counts are background information and are not reported as local measurements.
 <!-- DATASET_END -->
 
-Before extraction, every ZIP member is checked for traversal, absolute paths, Windows path tricks, symbolic links, encryption, duplicate targets and unreasonable total size. Files are extracted into a temporary directory. The six folders and all image files must validate before the dataset is installed. Exact decoded duplicates within a category are removed from the modelling inventory; contradictory labels for identical content cause an error.
+Before extraction, every ZIP member is checked for traversal, absolute paths, Windows path tricks, symbolic links, encryption, duplicate targets and unreasonable total size. Files are extracted into a temporary directory. The six folders and all image files must validate before the dataset is installed. Exact decoded duplicates within a category are removed from the modelling inventory. The real archive also contains identical images assigned different labels; all members of each conflicting-label group are excluded from every split. This avoids inventing ground truth by choosing the first encountered label. Raw folder counts and every excluded path, hash and reason are recorded alongside the modelling distribution.
 
 ## 11 Data preprocessing
 

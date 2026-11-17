@@ -59,3 +59,19 @@ class DatasetTests(unittest.TestCase):
     def test_missing_classes_fail(self):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(ValueError): inventory(tmp)
+
+    def test_all_conflicting_duplicates_are_quarantined(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            for ci,category in enumerate(CLASS_NAMES):
+                (root/category).mkdir()
+                Image.new("RGB",(8,8),(ci*30,20,15)).save(root/category/"unique.png")
+            ambiguous=Image.new("RGB",(8,8),(3,6,9))
+            ambiguous.save(root/"paper/conflict.png")
+            ambiguous.save(root/"plastic/conflict.png")
+            frame=inventory(root)
+            self.assertEqual(len(frame),6)
+            self.assertTrue(all("unique" in path for path in frame.path))
+            self.assertEqual(len(frame.attrs["excluded_images"]),2)
+            self.assertEqual({x["reason"] for x in frame.attrs["excluded_images"]},{"conflicting labels"})
+            self.assertEqual(frame.attrs["raw_class_distribution"]["paper"],2)
