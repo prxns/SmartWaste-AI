@@ -1,0 +1,49 @@
+name: Deliver verified checkpoint to workspace
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/local-delivery.yml]
+permissions:
+  contents: write
+jobs:
+  transfer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Export the existing verified checkpoint as transfer chunks
+        run: |
+          python - <<'PY'
+          import base64, hashlib, json
+          from pathlib import Path
+          model = Path("models/smartwaste.keras").read_bytes()
+          expected = json.loads(Path("models/model_manifest.json").read_text())["model_sha256"]
+          assert hashlib.sha256(model).hexdigest() == expected
+          target = Path("workspace-model-transfer")
+          target.mkdir()
+          encoded = base64.b64encode(model).decode("ascii")
+          parts = []
+          for index, offset in enumerate(range(0, len(encoded), 500000)):
+              name = f"part-{index:03}.txt"
+              (target / name).write_text(encoded[offset:offset+500000], encoding="ascii")
+              parts.append(name)
+          (target / "manifest.json").write_text(json.dumps({"bytes": len(model), "sha256": expected, "parts": parts}, indent=2))
+          print("Verified checkpoint:", len(model), "bytes;", len(parts), "transfer parts")
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c codex/workspace-delivery
+          git add workspace-model-transfer
+          git commit -m 'Prepare verified checkpoint for workspace delivery'
+          git push origin HEAD:codex/workspace-delivery
+      - name: Remove the temporary transfer branch after verified receipt
+        run: |
+          for attempt in {1..90}; do
+            git fetch origin main
+            if ! git cat-file -e origin/main:.github/workflows/local-delivery.yml 2>/dev/null; then
+              git push origin --delete codex/workspace-delivery
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'Workspace delivery receipt has not arrived; transfer branch remains available.'
