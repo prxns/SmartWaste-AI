@@ -4,6 +4,7 @@ import base64
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from urllib.request import urlopen
 from config import ROOT
@@ -115,6 +116,7 @@ def main():
             page.get_by_role("heading",name="2 · Fuzzy recycling decision support",exact=True).wait_for(timeout=60000)
             wait_until_idle(page)
             page.screenshot(path=str(target/"classification.png"),full_page=False)
+            page.locator(".st-key-decision_panel").screenshot(path=str(target/"decision_support.png"))
             if args.responsive:
                 responsive_pages(page,target,wait_until_idle,classified=True)
             slider=page.get_by_role("slider")
@@ -124,10 +126,21 @@ def main():
             print("Classifier contamination after keyboard interaction:",slider.get_attribute("aria-valuenow"))
             page.get_by_text("Low suitability",exact=True).wait_for()
             wait_until_idle(page)
+            page.locator(".st-key-decision_panel").screenshot(path=str(target/"decision_support_contaminated.png"))
             page.get_by_text("Dashboard",exact=True).first.click()
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
             wait_until_idle(page)
             page.screenshot(path=str(target/"dashboard.png"),full_page=False)
+            with tempfile.TemporaryDirectory() as temporary:
+                with page.expect_download() as event:
+                    page.get_by_role("button",name="Export session CSV",exact=True).click()
+                export=__import__("pathlib").Path(temporary)/"session.csv"
+                event.value.save_as(str(export))
+                activity=pd.read_csv(export)
+                assert len(activity)==1 and activity.iloc[0].contamination==100
+                assert activity.iloc[0].category in ("cardboard","glass","metal","paper","plastic","trash")
+                print("Real session CSV export verified:",len(activity),"classification")
+            wait_until_idle(page)
             for label,filename in [("Fuzzy Logic Laboratory","fuzzy_laboratory.png"),("Model Evaluation","model_evaluation.png"),("About & Methodology","methodology.png")]:
                 page.get_by_text(label,exact=True).first.click()
                 page.get_by_role("heading",name={"fuzzy_laboratory.png":"Fuzzy Logic Laboratory","model_evaluation.png":"Model evaluation","methodology.png":"About & methodology"}[filename],exact=True).wait_for()
