@@ -17,6 +17,12 @@ if errorlevel 1 goto failed
 if errorlevel 1 goto failed
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 goto failed
+if not exist "models\smartwaste.keras" (
+  if exist "models\model_manifest.json" (
+    ".venv\Scripts\python.exe" -m scripts.download_model
+    if errorlevel 1 goto failed
+  )
+)
 echo Setup complete. Run run.bat to launch SmartWaste AI.
 exit /b 0
 :failed

@@ -15,6 +15,8 @@ run.bat
 
 `setup.bat` creates `.venv` and installs pinned dependencies. `run.bat` activates that environment and starts the application at the local URL printed by Streamlit, normally http://localhost:8501. No accounts, database, API keys or paid services are needed.
 
+The trained checkpoint is included in the GitHub repository. If an editor's working folder omitted that binary but retains its manifest, setup restores the actual published checkpoint and checks its SHA-256 automatically. You can also run `python -m scripts.download_model`. A failed download never creates a fake or partially accepted model.
+
 If the repository already contains `models/smartwaste.keras`, classification works immediately after setup. Otherwise activate the environment and train:
 
 ```bat

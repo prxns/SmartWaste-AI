@@ -9,8 +9,8 @@ COLORS = {"Low": "#829889", "Medium": "#B5A443", "High": "#22694D"}
 def style(figure, title, height=290):
     figure.update_layout(title=dict(text=title, font_size=16), height=height,
                          paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                         font=dict(color="#18392D"), margin=dict(l=15, r=15, t=50, b=25),
-                         legend=dict(orientation="h", y=-0.2),
+                         font=dict(color="#18392D"), margin=dict(l=15, r=15, t=50, b=75),
+                         legend=dict(orientation="h", y=-0.3, yanchor="top"),
                          xaxis=dict(showgrid=False), yaxis=dict(gridcolor="#DFE7DD"))
     return figure
 

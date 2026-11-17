@@ -20,6 +20,12 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: python -m pip install -r requirements.txt
+      - name: Verify real published checkpoint restoration
+        if: hashFiles('models/smartwaste.keras') != ''
+        run: |
+          mv models/smartwaste.keras /tmp/smartwaste-original.keras
+          python -m scripts.download_model
+          cmp /tmp/smartwaste-original.keras models/smartwaste.keras
       - run: python -m pytest -q
       - name: Test actual Streamlit server startup
         shell: bash
@@ -57,14 +63,14 @@ jobs:
           cache: pip
       - if: steps.model.outputs.missing == 'true' || env.REFRESH_REPORT == 'true'
         run: python -m pip install -r requirements.txt
-      - if: steps.model.outputs.missing == 'true'
+      - if: steps.model.outputs.missing == 'true' || env.REFRESH_REPORT == 'true'
         run: python -m scripts.download_dataset
       - if: steps.model.outputs.missing == 'true'
         run: python -m scripts.train_model --epochs 12 --threads 2
       - if: steps.model.outputs.missing == 'true'
         run: python -m pytest -q
       - name: Capture real application screenshots
-        if: steps.model.outputs.missing == 'true'
+        if: steps.model.outputs.missing == 'true' || env.REFRESH_REPORT == 'true'
         run: |
           python -m pip install playwright==1.56.0
           python -m playwright install --with-deps chromium
@@ -100,7 +106,7 @@ jobs:
           git add models results docs assets/figures assets/screenshots
           git commit -m 'Add trained MobileNetV2 model and held-out evaluation'
           git push origin HEAD:main
-          git switch -c codex/report-layout-final
+          git switch -c codex/report-layout-reviewed
           git add report-preview
           git commit -m 'Render final academic report for layout review'
-          git push origin HEAD:codex/report-layout-final
+          git push origin HEAD:codex/report-layout-reviewed

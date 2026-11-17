@@ -8,7 +8,14 @@ from config import ROOT
 
 
 def main():
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import sync_playwright, expect
+    def wait_until_idle(page):
+        # Use Streamlit's own end-to-end test contract. Headings may appear
+        # before a rerun completes and old page elements are removed.
+        page.wait_for_timeout(250)
+        page.locator("[data-testid='stApp'][data-test-script-state='notRunning']").wait_for(timeout=60000,state="attached")
+        expect(page.get_by_test_id("stSkeleton")).to_have_count(0,timeout=60000)
+        page.wait_for_timeout(500)
     target=ROOT/"assets/screenshots"; target.mkdir(parents=True,exist_ok=True)
     process=subprocess.Popen([sys.executable,"-m","streamlit","run","app.py","--server.headless","true","--server.port","8510"],cwd=ROOT,
                              stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
@@ -25,6 +32,7 @@ def main():
             page=browser.new_page(viewport={"width":1440,"height":1050},device_scale_factor=1)
             page.goto("http://localhost:8510",wait_until="networkidle")
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
+            wait_until_idle(page)
             page.screenshot(path=str(target/"dashboard.png"),full_page=False)
             # Exercise a real held-out image through the browser, not a mock prediction.
             import pandas as pd
@@ -34,6 +42,7 @@ def main():
             page.locator('input[type="file"]').set_input_files(str(ROOT/"data/dataset-resized"/sample.path))
             page.get_by_role("button",name="Classify image",exact=True).click()
             page.get_by_role("heading",name="2 · Fuzzy recycling decision support",exact=True).wait_for(timeout=60000)
+            wait_until_idle(page)
             page.screenshot(path=str(target/"classification.png"),full_page=False)
             slider=page.get_by_role("slider")
             # BaseWeb's slider implements arrow keys; End is not portable.
@@ -41,13 +50,15 @@ def main():
                 slider.press("ArrowRight")
             print("Classifier contamination after keyboard interaction:",slider.get_attribute("aria-valuenow"))
             page.get_by_text("Low suitability",exact=True).wait_for()
+            wait_until_idle(page)
             page.get_by_text("Dashboard",exact=True).first.click()
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
+            wait_until_idle(page)
             page.screenshot(path=str(target/"dashboard.png"),full_page=False)
             for label,filename in [("Fuzzy Logic Laboratory","fuzzy_laboratory.png"),("Model Evaluation","model_evaluation.png")]:
                 page.get_by_text(label,exact=True).first.click()
                 page.get_by_role("heading",name="Fuzzy Logic Laboratory" if filename.startswith("fuzzy") else "Model evaluation",exact=True).wait_for()
-                page.wait_for_timeout(1500)
+                wait_until_idle(page)
                 if page.get_by_test_id("stException").count(): raise RuntimeError("Application rendered an exception.")
                 page.screenshot(path=str(target/filename),full_page=False)
             browser.close()
