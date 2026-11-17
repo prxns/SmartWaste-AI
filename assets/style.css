@@ -1,0 +1,20 @@
+/* Environmental technology palette; native controls stay accessible. */
+.block-container { max-width: 1240px; padding-top: 2.2rem; padding-bottom: 3rem; }
+h1 { font-size: 2.25rem !important; font-weight: 650 !important; letter-spacing: -0.06rem; }
+h2 { font-size: 1.4rem !important; letter-spacing: -0.02rem; }
+h3 { font-size: 1.06rem !important; }
+[data-testid="stSidebar"] { border-right: 1px solid #DDE6D9; }
+[data-testid="stMetric"] { background: #FFFFFF; border: 1px solid #DFE7DA; border-radius: 12px; padding: 20px; }
+[data-testid="stMetricLabel"] { color: #607265; font-size: .85rem; }
+[data-testid="stMetricValue"] { font-size: 1.8rem; }
+[data-testid="stFileUploader"] { border-radius: 12px; }
+.eyebrow { font-size: .72rem; text-transform: uppercase; letter-spacing: .17rem; color: #637F62; font-weight: 600; margin-bottom: 10px; }
+.hero { background: #173F30; color: #F4F6EE; padding: 32px; border-radius: 18px; margin: 8px 0 28px; }
+.hero h2 { color: #F4F6EE; font-size: 1.75rem !important; margin-top: 0; }
+.hero p { color: #D7E4D1; max-width: 680px; margin-bottom: 0; line-height: 1.7; }
+.pill { display: inline-block; background: #E9F0DD; color: #2F593D; padding: 5px 11px; border-radius: 20px; font-size: .78rem; }
+.result { background: #FFF; border: 1px solid #DCE5D6; border-left: 4px solid #3D7052; padding: 22px; border-radius: 12px; margin-bottom: 18px; }
+.result strong { font-size: 1.65rem; font-weight: 600; }
+.footnote { font-size: .78rem; color: #708071; padding-top: 20px; }
+div.stButton > button[kind="primary"] { background-color: #246148; border: 0; }
+@media(max-width: 700px) { .block-container { padding-top: 1rem; } .hero { padding: 22px; } h1 { font-size: 1.8rem !important; } }
