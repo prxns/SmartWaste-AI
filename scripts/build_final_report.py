@@ -162,7 +162,7 @@ def content():
     section("7.3","Training behaviour","Training accuracy rises from 46.43% at epoch 1 to 85.71% at epoch 12. Validation loss is lowest at epoch 10, rather than at the last epoch; that saved checkpoint is used for test evaluation. The curves describe the training and validation partitions, not the held-out test accuracy. No additional fine-tuning experiment is claimed.")
     fig("Recorded training and validation accuracy","../results/accuracy.png")
     fig("Recorded training and validation loss","../results/loss.png")
-    section("7.4","Software and integration testing",sections[24])
+    section("7.4","Software and integration testing","Unit tests cover shoulder endpoints, invalid fuzzy inputs, analytic centroids, nine-rule activation, aggregate construction, sampled ranges and known monotonicity counterexamples. Image tests check formats, transparency, damaged files, size limits and preprocessing shape/range. Dataset tests check extraction safety, validation, duplicate handling and disjoint seeded splits.\n\nTensorFlow integration tests build and serialize the real architecture without downloading weights and compare the supplied checkpoint with its recorded hashes. Streamlit AppTest opens every section, changes laboratory inputs and checks session clearing. Separate real-server and Windows browser checks exercise launch, model prediction, contamination and CSV export. The reproducible test command is python -m pytest -q; the detailed record is docs/VALIDATION.md.")
     markdown(table(["Executed check","Observed outcome"],[
         ["Local, Linux and Windows Pytest suites","34 passed; 2 expected fuzzy failures; 6 subtests passed"],
         ["Real Windows launch and browser classification","Passed with the shipped checkpoint"],
@@ -180,7 +180,7 @@ def content():
     for i in chosen:rows.append([tests[i]["path"],CLASS_NAMES[int(labels[i])],CLASS_NAMES[int(guess[i])],f"{scores[i,guess[i]]:.4f}","Correct" if labels[i]==guess[i] else "Incorrect"])
     markdown(table(["Saved test image","Actual label","Predicted label","Top score","Outcome"],rows))
     markdown("These examples are derived from results/test_predictions.npz in the recorded test-split order. The incorrect examples show that a high softmax score can accompany a wrong material label. Their photographs are not invented or substituted; the table reports saved evidence.")
-    section("8.2","Fuzzy results and mathematical limitation",sections[23])
+    section("8.2","Fuzzy results and mathematical limitation","The prescribed Mamdani surface is not globally monotonic. At potential 15, increasing contamination from 25 to 26 changes the crisp score from 19.4444 to 19.6316. With contamination fixed at 100, increasing potential from 38 to 39 changes the score from 21.9119 to 21.6899. These counterexamples are documented in docs/FUZZY_VALIDATION.md and retained as two expected-failure tests.\n\nClipping overlapping asymmetric shoulder and triangular sets can shift the aggregate centroid locally even though the linguistic rule table appears ordered. The implementation retains the required memberships, nine rules and min/max operators. This limitation is disclosed without adjusting scores after inference or claiming a monotonic guarantee.")
     section("8.3","Scope of the evidence",sections[25])
     chapter(9,"Conclusion and Future Scope")
     section("9.1","Conclusion",sections[26].replace("when training completes","for the completed training run"))
@@ -268,7 +268,7 @@ def document(blocks,pages=None):
     def para(t,style=None):
         p=d.add_paragraph(style=style);inline(p,t);return p
     def newpage(title):
-        d.add_page_break();d.add_heading(title,1)
+        p=d.add_heading(title,1);p.paragraph_format.page_break_before=True
     def tbl(rows):
         t=d.add_table(rows=0,cols=len(rows[0]));t.style="Table Grid"
         for ri,row in enumerate(rows):
@@ -278,6 +278,7 @@ def document(blocks,pages=None):
             for cell,value in zip(cells,row):
                 p=cell.paragraphs[0];p.paragraph_format.space_after=Pt(4);p.paragraph_format.space_before=Pt(3)
                 inline(p,str(value).replace(BT,""))
+                if len(rows)<=10:p.paragraph_format.keep_with_next=(ri<len(rows)-1)
                 for run in p.runs:run.font.size=Pt(9)
                 if ri==0:
                     sh=OxmlElement("w:shd");sh.set(qn("w:fill"),"E9F0E5");cell._tc.get_or_add_tcPr().append(sh)
@@ -388,7 +389,7 @@ def verify_and_preview(blocks):
     full="\n".join(texts)
     assert 25<=len(pdf)<=65, len(pdf)
     for title in [t for k,t,key,c in blocks if k=="h1"]:assert title in " ".join(full.split()),title
-    assert all(len(t.strip())>40 for t in texts), "Accidental blank page"
+    assert all(len(p.get_text(clip=fitz.Rect(0,48,p.rect.width,p.rect.height-48)).strip())>25 or p.get_images() for p in pdf), "Accidental blank page"
     assert "Student 3" not in full and "81.53%" in full and "77.70%" in full
     assert "monotonicity" in full and "expected" in full
     issues=[]
@@ -414,7 +415,8 @@ def verify_and_preview(blocks):
         board.save(target/f"contact-{batch//12+1}.png")
     record={"pages":len(pdf),"figures":sum(k=="image" for k,*_ in blocks),"tables":sum(k=="table" for k,*_ in blocks),"model_sha256":sha("models/smartwaste.keras"),"pdf_sha256":sha("docs/"+NAME+".pdf"),"checks":"chapters, figures, tables, metrics, placeholders, no blank pages, text bounds"}
     (target/"validation.json").write_text(json.dumps(record,indent=2));print("REPORT_VALIDATION",json.dumps(record))
-    for p in sorted(target.glob("contact-*.png")):
+    selected=[target/"page-01.png",target/("page-%02d.png"%paginate(blocks)["appendixA"]),target/("page-%02d.png"%paginate(blocks)["chapter5"])]
+    for p in sorted(target.glob("contact-*.png"))+selected:
         encoded=base64.b64encode(p.read_bytes()).decode()
         for n,o in enumerate(range(0,len(encoded),60000)):print("REPORT_REVIEW",p.name,n,encoded[o:o+60000])
     # Files are transmitted as text only for this restricted authoring environment.
