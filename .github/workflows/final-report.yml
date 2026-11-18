@@ -18,7 +18,7 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install numpy==2.2.6 pandas==2.3.3 Pillow==12.0.0 python-docx==1.2.0 pymupdf==1.26.7 playwright==1.56.0 streamlit==1.51.0 plotly==6.4.0
       - run: command -v google-chrome || python -m playwright install --with-deps chromium
-      - run: sudo apt-get update && sudo apt-get install -y libreoffice-writer fonts-liberation
+      - run: sudo apt-get -o Acquire::ForceIPv4=true -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update && sudo apt-get -o Acquire::ForceIPv4=true -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y --no-install-recommends libreoffice-writer fonts-liberation
       - run: python -m scripts.build_final_report
       - uses: actions/upload-artifact@v4
         if: always()
