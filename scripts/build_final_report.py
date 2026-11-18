@@ -41,7 +41,7 @@ def prepare_screens():
             except OSError: time.sleep(1)
         else: raise RuntimeError("Report screenshot app did not start")
         with sync_playwright() as pw:
-            browser=pw.chromium.launch()
+            browser=pw.chromium.launch(executable_path=shutil.which("google-chrome") or None)
             page=browser.new_page(viewport={"width":1440,"height":1100},device_scale_factor=1)
             page.goto("http://localhost:8520",wait_until="networkidle")
             page.get_by_text("Fuzzy Logic Laboratory",exact=True).first.click()
@@ -146,7 +146,7 @@ def content():
     markdown(table(["Potential","Contamination","Centroid","Status","Active rules"],rows))
     section("5.7","Confidence and suitability are different","The six CNN softmax scores rank material categories. They are uncalibrated and do not guarantee correctness. The fuzzy score is calculated from an assumed material potential and a user's contamination input; it is neither a probability nor an observed recycling percentage. Changing contamination does not retrain or replace the CNN.")
     fig("Actual Mamdani aggregate and centroid in the laboratory","screenshots/fuzzy_aggregate.png")
-    fig("Actual membership degrees and nine rule firing strengths","screenshots/fuzzy_rules.png")
+    fig("Actual nine-rule firing strengths in the laboratory","screenshots/fuzzy_rules.png")
     chapter(6,"Application Development")
     section("6.1","Modules, contracts and session state",sections[19])
     section("6.2","Five application sections",sections[20])
@@ -373,10 +373,13 @@ def paginate(blocks):
     headings={key:text for kind,text,key,cap in blocks if kind=="h1"}
     for i,page in enumerate(pdf,1):
         text=" ".join(page.get_text().split())
+        large=" ".join(span["text"] for b in page.get_text("dict")["blocks"] for line in b.get("lines",[]) for span in line["spans"] if span["size"]>=16)
+        large=" ".join(large.split())
         for key,title in headings.items():
-            if title in text:mapping.setdefault(key,i)
+            if title in large:mapping.setdefault(key,i)
         for match in re.finditer(r"\b(Figure|Table)\s+(\d+)\.",text):
             mapping.setdefault(("image" if match[1]=="Figure" else "table")+match[2],i)
+    assert mapping.get("chapter1",0)>8, mapping
     return mapping
 
 def verify_and_preview(blocks):
