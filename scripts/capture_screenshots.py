@@ -101,6 +101,7 @@ def main():
             page.goto("http://localhost:8510",wait_until="networkidle")
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
             wait_until_idle(page)
+            inspect_layout(page,"dashboard overview")
             page.screenshot(path=str(target/"dashboard.png"),full_page=False)
             if args.responsive:
                 responsive_pages(page,target,wait_until_idle)
@@ -110,11 +111,13 @@ def main():
             sample=test[test.split=="test"].iloc[0]
             page.get_by_text("Waste Classification",exact=True).first.click()
             wait_until_idle(page)
+            inspect_layout(page,"classification empty overview")
             page.screenshot(path=str(target/"classification_empty.png"),full_page=False)
             page.locator('input[type="file"]').set_input_files(str(ROOT/"data/dataset-resized"/sample.path))
             page.get_by_role("button",name="Classify image",exact=True).click()
             page.get_by_role("heading",name="2 · Fuzzy recycling decision support",exact=True).wait_for(timeout=60000)
             wait_until_idle(page)
+            inspect_layout(page,"classification result overview")
             page.screenshot(path=str(target/"classification.png"),full_page=False)
             page.locator(".st-key-decision_panel").screenshot(path=str(target/"decision_support.png"))
             if args.responsive:
@@ -136,6 +139,7 @@ def main():
             page.get_by_text("Dashboard",exact=True).first.click()
             page.get_by_role("heading",name="Waste insights, clearly explained.").wait_for()
             wait_until_idle(page)
+            inspect_layout(page,"populated dashboard overview")
             page.screenshot(path=str(target/"dashboard.png"),full_page=False)
             with tempfile.TemporaryDirectory() as temporary:
                 with page.expect_download() as event:
@@ -152,6 +156,7 @@ def main():
                 page.get_by_role("heading",name={"fuzzy_laboratory.png":"Fuzzy Logic Laboratory","model_evaluation.png":"Model evaluation","methodology.png":"About & methodology"}[filename],exact=True).wait_for()
                 wait_until_idle(page)
                 if page.get_by_test_id("stException").count(): raise RuntimeError("Application rendered an exception.")
+                inspect_layout(page,filename)
                 page.screenshot(path=str(target/filename),full_page=False)
             browser.close()
             if args.review_previews:
