@@ -121,8 +121,14 @@ def main():
                 responsive_pages(page,target,wait_until_idle,classified=True)
             slider=page.get_by_role("slider")
             # BaseWeb's slider implements arrow keys; End is not portable.
-            for _ in range(80):
+            # Each change reruns Streamlit. A burst of keypresses can race the
+            # widget remount, so acknowledge the rendered value before the next.
+            for value in range(int(slider.get_attribute("aria-valuenow"))+1,101):
                 slider.press("ArrowRight")
+                expect(page.get_by_test_id("stMetric").filter(has_text="User contamination input")
+                       .get_by_test_id("stMetricValue")).to_have_text(f"{value} / 100",timeout=10000)
+                wait_until_idle(page)
+            expect(slider).to_have_attribute("aria-valuenow","100")
             print("Classifier contamination after keyboard interaction:",slider.get_attribute("aria-valuenow"))
             page.get_by_text("Low suitability",exact=True).wait_for()
             wait_until_idle(page)
