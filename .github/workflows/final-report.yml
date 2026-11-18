@@ -1,0 +1,30 @@
+name: Render final CSN441 report
+on:
+  push:
+    branches: [codex/final-report]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  report:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install numpy==2.2.6 pandas==2.3.3 Pillow==12.0.0 python-docx==1.2.0 pymupdf==1.26.7 playwright==1.56.0 streamlit==1.51.0 plotly==6.4.0
+      - run: python -m playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y libreoffice-writer fonts-liberation
+      - run: python -m scripts.build_final_report
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SmartWaste-final-report
+          path: |
+            docs/SmartWaste_AI_Final_Project_Report.*
+            docs/screenshots/
+            report-preview-final/
