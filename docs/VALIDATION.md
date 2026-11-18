@@ -47,3 +47,15 @@ The final runtime pins Keras 3.15.1, matching the environment used for the suppl
 On 18 November 2026, the exact trained checkpoint was also restored to the existing Windows working folder as `models/smartwaste.keras`. Its 9,718,514-byte size and SHA-256 match the published training manifest. The Keras archive passed its ZIP integrity check; embedded metadata confirms Keras 3.15.1 and the saved checkpoint timestamp. Temporary transfer files were kept outside the main project history, and the transfer workflow and branch were removed after verified receipt.
 
 The remaining local environment limitation is package installation: the isolated virtual environment exists, but this session cannot resolve the package-index host, so TensorFlow, Streamlit, Plotly and Pytest cannot be installed here. The model and full application have already passed inference, UI and startup checks in GitHub CI. Run `setup.bat` and then `run.bat` from a normal Windows terminal with internet access to complete installation and launch locally.
+
+## UI refinement validation — 18 November 2026
+
+The clipped page eyebrow was caused by custom main-container top padding of 2.2rem, reduced to 1rem on small screens, overriding Streamlit's native 6rem toolbar clearance. Both overrides are removed. Shared page headers now use explicit line heights without fixed heights or hidden overflow. Sidebar branding, active navigation, cards, charts, the classifier empty state, image/result panels and the methodology layout are refined consistently.
+
+[Windows browser validation](https://github.com/prxns/SmartWaste-AI/actions/runs/44239270551) passed setup.bat, dependency checks, the complete suite and the real run.bat browser flow. Pytest reported **34 passed, 2 xfailed and 6 subtests passed**. [Linux validation](https://github.com/prxns/SmartWaste-AI/actions/runs/44239270812) also passed the suite, checkpoint restoration and Streamlit startup.
+
+All five pages were tested at **1920×1080, 1366×768 and 1280×720**, with device scale 1 and normal browser zoom. Fifteen page/viewport combinations and three classified-result layouts passed checks for horizontal overflow, toolbar/header clearance and sidebar clipping. Seven additional overview checks passed. Actual screenshots are in `assets/screenshots/`; the full responsive captures are retained with the Windows run.
+
+The browser uploaded a real held-out image, used the shipped CNN, changed contamination to 100, confirmed the displayed value and Low suitability, and downloaded a CSV containing the matching session record. Each keyboard change waits for Streamlit's rendered update. The existing unit suite also verifies laboratory interaction and session-history clearing.
+
+Checksums confirm that the trained model, its manifest and metrics, model loader module, fuzzy engine, configuration, existing expected-failure tests, requirements and Windows launch scripts are unchanged. The two prescribed fuzzy monotonicity conflicts remain documented. No retraining, runtime dependency, database, desktop packaging or alternate frontend was introduced.
